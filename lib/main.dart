@@ -107,6 +107,25 @@ class MyHomePage extends ConsumerWidget {
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
+                        // 画像が存在しない、または表示できない場合はデフォルトアイコンを表示させる
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 180,
+                            width: double.infinity,
+                            child: const Icon(
+                              Icons.error,
+                              size: 60,
+                              color: Colors.grey,
+                            ),
+                          );
+                          // 画像を表示させる場合、一時的にネット経由で画像を取得しているが、Asset画像として登録して表示させる
+                          return Image.network(
+                            "https://hugeicons.com/api/og?uuid=alert-circle-solid-rounded",
+                            height: 180,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          );
+                        },
                       ),
                       const SizedBox(height: 8),
                       Expanded(
