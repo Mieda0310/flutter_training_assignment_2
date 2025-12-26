@@ -1,25 +1,29 @@
 class Product {
   final int id;
-  final String name;
-  final int price;
-  final int stock;
-  final String imageUrl;
+  final String? name;
+  final String? description;
+  final int? price;
+  final int? stock;
+  final String? imageUrl;
 
   Product({
     required this.id,
-    required this.name,
-    required this.price,
-    required this.stock,
-    required this.imageUrl,
+    this.name,
+    this.description,
+    this.price,
+    this.stock,
+    this.imageUrl,
   });
 
   // JSONをDartに変える
   factory Product.fromJson(Map<String, dynamic> json) {
+    // TODO: これimageUrlだけ ?? 使っているけど他のはいいの？
     return Product(
       id: json["id"],
-      name: json["name"],
-      price: json["price"],
-      stock: json["stock"],
+      name: json["name"] ?? "",
+      description: json["description"] ?? "",
+      price: json["price"] ?? 0,
+      stock: json["stock"] ?? 0,
       imageUrl: json["thumbnail_image"] ?? "",
     );
   }
@@ -29,9 +33,10 @@ class Product {
     return {
       "id": id,
       "name": name,
+      "description": description,
       "price": price,
       "stock": stock,
-      "imageUrl": imageUrl,
+      "thumbnail_image": imageUrl,
     };
   }
 }
