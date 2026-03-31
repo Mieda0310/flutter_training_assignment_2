@@ -16,7 +16,7 @@ class ImageDownload {
   //  画像のURLを取得するためのdioをインスタンス化する
   final Dio dio = Dio();
 
-  Future<void> downloadAndSaveImage(String imageUrl) async {
+  Future<void> downloadAndSaveImage(String imageUrl, bool isVideo) async {
     // 画像のダウンロードの実装
 
     // まずはダウンロード権限があるかを確認する
@@ -33,12 +33,21 @@ class ImageDownload {
     // 一時ディレクトリを取得する（path_providerの機能）
     final tempDir = await getTemporaryDirectory();
     // 取得したディレクトリを完全なpathにする
-    final filePath =
-        "${tempDir.path}/download_image_${DateTime.now().microsecondsSinceEpoch}.jpg";
+    final filePath = isVideo
+        ? "${tempDir.path}/download_image_${DateTime.now().microsecondsSinceEpoch}.mp4"
+        : "${tempDir.path}/download_image_${DateTime.now().microsecondsSinceEpoch}.jpg";
     // dioでURLにアクセスし、画像データを取得したら、filePathにファイルとして保存
     await dio.download(imageUrl, filePath);
-    // 作成した画像ファイルを端末内の写真フォルダに投入
-    await Gal.putImage(filePath);
+
+    // 画像と動画でダウンロードが異なるのは、端末内の保存方法のみのため、分岐で分ける
+    if (isVideo) {
+      // 作成した動画ファイルを端末内の写真フォルダに投入
+      await Gal.putVideo(filePath);
+    } else {
+      // 作成した画像ファイルを端末内の写真フォルダに投入
+      await Gal.putImage(filePath);
+    }
+
     // 画像を端末に投入後、一時ファイルとして作成したものを削除
     final file = File(filePath);
     if (await file.exists()) {

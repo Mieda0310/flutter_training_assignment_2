@@ -3,8 +3,13 @@ import 'package:flutter_training_assignment_2/features/media_download/image_down
 
 class ImageDownloadDialog extends StatefulWidget {
   final String imageUrl;
+  final bool isVideo;
 
-  const ImageDownloadDialog({super.key, required this.imageUrl});
+  const ImageDownloadDialog({
+    super.key,
+    required this.imageUrl,
+    required this.isVideo,
+  });
 
   @override
   State<ImageDownloadDialog> createState() => _ImageDownloadDialogState();
@@ -20,8 +25,8 @@ class _ImageDownloadDialogState extends State<ImageDownloadDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 24),
-          const Text(
-            '画像をダウンロードしますか？',
+          Text(
+            widget.isVideo ? '動画をダウンロードしますか？' : '画像をダウンロードしますか？',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
@@ -30,24 +35,30 @@ class _ImageDownloadDialogState extends State<ImageDownloadDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextButton(
-                // 画像のダウンロード中は処理しない
+                // ダウンロード中は処理しない
                 onPressed: isLoading
                     ? null
                     : () async {
-                        print("ダウンロード処理の開始, path:image_download_dialog.dart");
                         try {
                           setState(() {
                             isLoading = true;
                           });
                           final imageDown = ImageDownload();
-                          await imageDown.downloadAndSaveImage(widget.imageUrl);
+                          await imageDown.downloadAndSaveImage(
+                            widget.imageUrl,
+                            widget.isVideo,
+                          );
 
                           // 画面描写が完了していない間は処理しない
                           if (!mounted) return;
 
                           // ダウンロードが完了したことをSnackBarで表示
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('画像を保存しました')),
+                            SnackBar(
+                              content: Text(
+                                widget.isVideo ? '動画を保存しました' : '画像を保存しました',
+                              ),
+                            ),
                           );
 
                           Navigator.of(context, rootNavigator: true).pop();
@@ -55,7 +66,7 @@ class _ImageDownloadDialogState extends State<ImageDownloadDialog> {
                           if (!mounted) return;
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("画像ダウンロードに失敗しました。$e")),
+                            SnackBar(content: Text("ダウンロードに失敗しました。$e")),
                           );
                         } finally {
                           if (!mounted) return;

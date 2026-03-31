@@ -54,35 +54,6 @@ class _ProductDetailState extends ConsumerState<ProductDetail> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // InkWell(
-                //   onTap: () {
-                //     // タップしたら画像ダウンロードダイアログを表示させる
-                //     print("画像をタップしました");
-                //     showDialog(
-                //       context: context,
-                //       builder: (_) =>
-                //           ImageDownloadDialog(imageUrl: product.imageUrl ?? ""),
-                //     );
-                //   },
-                //   child: Image.network(
-                //     product.imageUrl ?? "",
-                //     fit: BoxFit.cover,
-                //     width: double.infinity,
-                //     height: 250,
-                //     // 商品画像が存在しない場合はデフォルトのアイコンを表示させる
-                //     errorBuilder: (context, error, stackTrace) {
-                //       return Container(
-                //         height: 250,
-                //         width: double.infinity,
-                //         child: const Icon(
-                //           Icons.error,
-                //           size: 60,
-                //           color: Colors.grey,
-                //         ),
-                //       );
-                //     },
-                //   ),
-                // ),
                 SizedBox(
                   height: 250,
                   child: PageView.builder(
@@ -95,35 +66,44 @@ class _ProductDetailState extends ConsumerState<ProductDetail> {
                       });
                     },
                     itemBuilder: (context, index) {
-                      if (product.itemMedias.isEmpty) {
-                        return Image.network(
-                          product.imageUrl ?? "",
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        );
-                      }
-
                       final media = product.itemMedias[index];
+                      final imageUrl = product.itemMedias.isEmpty
+                          ? product.imageUrl
+                          : media.imageUrl;
                       final isVideo = media.hlsUrl.isNotEmpty;
 
                       if (isVideo) {
-                        return SimpleVideoPlayer(
-                          // keyが変更されると動画再生画面を切り替えるとWidgetが作り替えられることで動画再生が止まる
-                          key: ValueKey(index),
-                          videoUrl: media.hlsUrl,
+                        return Stack(
+                          children: [
+                            Center(
+                              child: SimpleVideoPlayer(
+                                // keyが変更されると動画再生画面を切り替えるとWidgetが作り替えられることで動画再生が止まる
+                                key: ValueKey(index),
+                                videoUrl: media.hlsUrl,
+                              ),
+                            ),
+                            Positioned(
+                              right: 1,
+                              child: DownloadButtonWidget(
+                                imageUrl: imageUrl ?? "",
+                                isVideo: true,
+                              ),
+                            ),
+                          ],
                         );
                       }
                       return Stack(
                         children: [
                           Image.network(
-                            media.imageUrl ?? media.imageUrl ?? "",
+                            imageUrl ?? "",
                             fit: BoxFit.cover,
                             width: double.infinity,
                           ),
                           Positioned(
                             right: 1,
                             child: DownloadButtonWidget(
-                              imageUrl: media.imageUrl,
+                              imageUrl: imageUrl ?? "",
+                              isVideo: false,
                             ),
                           ),
                         ],
@@ -294,16 +274,23 @@ class _ProductDetailState extends ConsumerState<ProductDetail> {
 
 class DownloadButtonWidget extends StatelessWidget {
   final String imageUrl;
-  const DownloadButtonWidget({super.key, required this.imageUrl});
+  final bool isVideo;
+
+  const DownloadButtonWidget({
+    super.key,
+    required this.imageUrl,
+    this.isVideo = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: () {
-        // タップしたら画像ダウンロードダイアログを表示させる
+        // タップしたら画像または動画のダウンロードダイアログを表示させる
         showDialog(
           context: context,
-          builder: (_) => ImageDownloadDialog(imageUrl: imageUrl),
+          builder: (_) =>
+              ImageDownloadDialog(imageUrl: imageUrl, isVideo: isVideo),
         );
       },
       icon: const Icon(Icons.download, color: Colors.black),
