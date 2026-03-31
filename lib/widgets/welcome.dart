@@ -7,7 +7,6 @@ Future<void> showWelcomeDialog(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   final shown = prefs.getBool('welcome_dialog_shown') ?? false;
 
-  debugPrint("ようこそを表示：$shown");
   // 一度表示させたら表示させない
   if (shown) return;
 

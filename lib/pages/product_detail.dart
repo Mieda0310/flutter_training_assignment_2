@@ -5,6 +5,7 @@ import 'package:flutter_training_assignment_2/models/product.dart';
 import 'package:flutter_training_assignment_2/providers/cart_provider.dart';
 import 'package:flutter_training_assignment_2/providers/product_provider.dart';
 import 'package:flutter_training_assignment_2/widgets/app_bar_widget.dart';
+import 'package:flutter_training_assignment_2/widgets/image_download_dialog.dart';
 
 class ProductDetail extends ConsumerWidget {
   final int id;
@@ -44,23 +45,34 @@ class ProductDetail extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.network(
-                  product.imageUrl ?? "",
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: 250,
-                  // 商品画像が存在しない場合はデフォルトのアイコンを表示させる
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 250,
-                      width: double.infinity,
-                      child: const Icon(
-                        Icons.error,
-                        size: 60,
-                        color: Colors.grey,
-                      ),
+                InkWell(
+                  onTap: () {
+                    // タップしたら画像ダウンロードダイアログを表示させる
+                    print("画像をタップしました");
+                    showDialog(
+                      context: context,
+                      builder: (_) =>
+                          ImageDownloadDialog(imageUrl: product.imageUrl ?? ""),
                     );
                   },
+                  child: Image.network(
+                    product.imageUrl ?? "",
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: 250,
+                    // 商品画像が存在しない場合はデフォルトのアイコンを表示させる
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 250,
+                        width: double.infinity,
+                        child: const Icon(
+                          Icons.error,
+                          size: 60,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
