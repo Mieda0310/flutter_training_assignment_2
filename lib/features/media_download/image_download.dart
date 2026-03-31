@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:video_compress/video_compress.dart';
 
 class ImageDownload {
   // ボタン押下で画像をダウンロード（dio、Gal, path_providerを使う）
@@ -41,8 +42,24 @@ class ImageDownload {
 
     // 画像と動画でダウンロードが異なるのは、端末内の保存方法のみのため、分岐で分ける
     if (isVideo) {
+      // 元のファイルサイズ
+      final originalSize = await File(filePath).length();
+
+      // 写真フォルダに投入する前に圧縮する
+      final compressedFile = await compressVideoFile(filePath);
+
+      // 圧縮後のファイルサイズ
+      final compressedSize = await compressedFile.length();
+
+      // 圧縮前後でのファイルサイズを出力
+      double toMB(int bytes) => bytes / 1024 / 1024;
+      print("圧縮前: ${toMB(originalSize).toStringAsFixed(2)} MB");
+      print("圧縮後: ${toMB(compressedSize).toStringAsFixed(2)} MB");
+
       // 作成した動画ファイルを端末内の写真フォルダに投入
-      await Gal.putVideo(filePath);
+      await Gal.putVideo(compressedFile.path);
+      // 圧縮したキャッシュを削除する
+      await VideoCompress.deleteAllCache();
     } else {
       // 作成した画像ファイルを端末内の写真フォルダに投入
       await Gal.putImage(filePath);
@@ -53,5 +70,25 @@ class ImageDownload {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  // video_compressのパッケージを使用し、動画を圧縮する
+  // ダウンロード前には使えないので、ファイルとして保存した後に圧縮する
+  Future<File> compressVideoFile(String filePath) async {
+    final info = await VideoCompress.compressVideo(
+      filePath,
+      quality: VideoQuality.MediumQuality,
+      deleteOrigin: false,
+      includeAudio: true,
+    );
+
+    final compressedFile = info?.file;
+    print("ファイルの圧縮開始");
+    print(compressedFile);
+    if (compressedFile == null) {
+      throw Exception("動画の圧縮に失敗しました。");
+    }
+
+    return compressedFile;
   }
 }
