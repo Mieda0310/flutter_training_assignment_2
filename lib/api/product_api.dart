@@ -88,6 +88,12 @@ class ProductApi {
       }
 
       final Map<String, dynamic> jsonItem = jsonDecode(response.body);
+      final medias = jsonItem["item_medias"];
+
+      // for (var media in medias) {
+      //   debugPrint(media.toString());
+      // }
+      // print(jsonItem["item_medias"].toString());
       final Product product = Product.fromJson(jsonItem);
       return product;
     } catch (error) {

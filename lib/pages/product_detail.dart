@@ -6,14 +6,23 @@ import 'package:flutter_training_assignment_2/providers/cart_provider.dart';
 import 'package:flutter_training_assignment_2/providers/product_provider.dart';
 import 'package:flutter_training_assignment_2/widgets/app_bar_widget.dart';
 import 'package:flutter_training_assignment_2/widgets/image_download_dialog.dart';
+import 'package:flutter_training_assignment_2/widgets/simple_video_player.dart';
+import 'package:video_player/video_player.dart';
 
-class ProductDetail extends ConsumerWidget {
+class ProductDetail extends ConsumerStatefulWidget {
   final int id;
   const ProductDetail({super.key, required this.id});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncProduct = ref.watch(productDetailProvider(id));
+  ConsumerState<ProductDetail> createState() => _ProductDetailState();
+}
+
+class _ProductDetailState extends ConsumerState<ProductDetail> {
+  int currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncProduct = ref.watch(productDetailProvider(widget.id));
 
     // 現在のカウント数を出力している
     final cartQuantity = ref.watch(quantityProvider);
@@ -45,35 +54,89 @@ class ProductDetail extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                InkWell(
-                  onTap: () {
-                    // タップしたら画像ダウンロードダイアログを表示させる
-                    print("画像をタップしました");
-                    showDialog(
-                      context: context,
-                      builder: (_) =>
-                          ImageDownloadDialog(imageUrl: product.imageUrl ?? ""),
-                    );
-                  },
-                  child: Image.network(
-                    product.imageUrl ?? "",
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 250,
-                    // 商品画像が存在しない場合はデフォルトのアイコンを表示させる
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 250,
-                        width: double.infinity,
-                        child: const Icon(
-                          Icons.error,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
+                // InkWell(
+                //   onTap: () {
+                //     // タップしたら画像ダウンロードダイアログを表示させる
+                //     print("画像をタップしました");
+                //     showDialog(
+                //       context: context,
+                //       builder: (_) =>
+                //           ImageDownloadDialog(imageUrl: product.imageUrl ?? ""),
+                //     );
+                //   },
+                //   child: Image.network(
+                //     product.imageUrl ?? "",
+                //     fit: BoxFit.cover,
+                //     width: double.infinity,
+                //     height: 250,
+                //     // 商品画像が存在しない場合はデフォルトのアイコンを表示させる
+                //     errorBuilder: (context, error, stackTrace) {
+                //       return Container(
+                //         height: 250,
+                //         width: double.infinity,
+                //         child: const Icon(
+                //           Icons.error,
+                //           size: 60,
+                //           color: Colors.grey,
+                //         ),
+                //       );
+                //     },
+                //   ),
+                // ),
+                SizedBox(
+                  height: 250,
+                  child: PageView.builder(
+                    itemCount: product.itemMedias.isEmpty
+                        ? 1
+                        : product.itemMedias.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        currentIndex = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      if (product.itemMedias.isEmpty) {
+                        return Image.network(
+                          product.imageUrl ?? "",
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        );
+                      }
+
+                      final media = product.itemMedias[index];
+                      final isVideo = media.hlsUrl.isNotEmpty;
+
+                      if (isVideo) {
+                        return SimpleVideoPlayer(
+                          // keyが変更されると動画再生画面を切り替えるとWidgetが作り替えられることで動画再生が止まる
+                          key: ValueKey(index),
+                          videoUrl: media.hlsUrl,
+                        );
+                      }
+                      return Stack(
+                        children: [
+                          Image.network(
+                            media.imageUrl ?? media.imageUrl ?? "",
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                          Positioned(
+                            right: 1,
+                            child: DownloadButtonWidget(
+                              imageUrl: media.imageUrl,
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
                 ),
+                Center(
+                  child: Text(
+                    "${currentIndex + 1}/${product.itemMedias.length}",
+                  ),
+                ),
+
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -225,6 +288,25 @@ class ProductDetail extends ConsumerWidget {
           // カードに追加ボタンなどのフッター
         );
       },
+    );
+  }
+}
+
+class DownloadButtonWidget extends StatelessWidget {
+  final String imageUrl;
+  const DownloadButtonWidget({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        // タップしたら画像ダウンロードダイアログを表示させる
+        showDialog(
+          context: context,
+          builder: (_) => ImageDownloadDialog(imageUrl: imageUrl),
+        );
+      },
+      icon: const Icon(Icons.download, color: Colors.black),
     );
   }
 }

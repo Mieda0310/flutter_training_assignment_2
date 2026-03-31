@@ -43,6 +43,7 @@ dependencies:
   dio: ^5.9.2
   gal: ^2.3.2
   path_provider: ^2.1.5
+  video_player: ^2.10.1
 
 dev_dependencies:
   flutter_test:
